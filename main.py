@@ -18,7 +18,8 @@ from torch.utils.data import Dataset
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from utils import visualize
-from data import colordata
+# from data import colordata
+from data_torch import colordata, RandSamplePerBatchCollator
 from CNP import get_encoder, get_decoder
 
 
@@ -51,8 +52,8 @@ def train(encoder, decoder, train_loader, train_output_dir):
         # Concatenate prediction coordinates with decoder output
         decoder_input = torch.cat((preds.float(), representation_expand),2) # bs x _ x (512+40)
         dist_a, mu_a, sigma_a, dist_b, mu_b, sigma_b = decoder(decoder_input)
-        log_prob_a = dist_a.log_prob(preds_gt[:,:,0:1])
-        log_prob_b = dist_b.log_prob(preds_gt[:,:,1:2])
+        log_prob_a = dist_a.log_prob(preds_gt[:,:,0:1].float())
+        log_prob_b = dist_b.log_prob(preds_gt[:,:,1:2].float())
 
         loss = -log_prob_a.mean() - log_prob_b.mean()
         loss.backward()
@@ -67,7 +68,7 @@ def train(encoder, decoder, train_loader, train_output_dir):
             print("Loss a: ", _loss_a/(i+1))
             print("Loss b: ", _loss_b/(i+1))
 
-            visualize(gray_c, color_c, x_coords_pred, y_coords_pred, mu_a, mu_b, 
+            visualize(gray_c, color_c, x_coords_obs, y_coords_obs, x_coords_pred, y_coords_pred, mu_a, mu_b, 
                       out_dir = train_output_dir + str(epoch) + "_" + str(i) + ".jpg")
             
     print("Final Training Loss Iteration ", i)
@@ -75,7 +76,7 @@ def train(encoder, decoder, train_loader, train_output_dir):
     print("Loss a: ", _loss_a/(i+1))
     print("Loss b: ", _loss_b/(i+1))
 
-    visualize(gray_c, color_c, x_coords_pred, y_coords_pred, mu_a, mu_b, 
+    visualize(gray_c, color_c, x_coords_obs, y_coords_obs, x_coords_pred, y_coords_pred, mu_a, mu_b, 
               out_dir = train_output_dir + str(epoch) + "_" + str(i) + ".jpg")
 
     
@@ -92,14 +93,14 @@ def test(encoder, decoder, test_loader, test_output_dir):
             # Concatenate prediction coordinates with decoder output
             decoder_input = torch.cat((preds.float(), representation_expand),2) # bs x _ x (512+40)
             dist_a, mu_a, sigma_a, dist_b, mu_b, sigma_b = decoder(decoder_input)
-            log_prob_a = dist_a.log_prob(preds_gt[:,:,0:1])
-            log_prob_b = dist_b.log_prob(preds_gt[:,:,1:2])
+            log_prob_a = dist_a.log_prob(preds_gt[:,:,0:1].float())
+            log_prob_b = dist_b.log_prob(preds_gt[:,:,1:2].float())
 
             loss = -log_prob_a.mean() - log_prob_b.mean()
             _loss += loss.item()
             _loss_a += log_prob_a.mean().item()
             _loss_b += log_prob_b.mean().item()
-            visualize(gray_c, color_c, x_coords_pred, y_coords_pred, mu_a, mu_b, 
+            visualize(gray_c, color_c, x_coords_obs, y_coords_obs, x_coords_pred, y_coords_pred, mu_a, mu_b, 
                       out_dir = test_output_dir + str(epoch) + "_" + str(i) + ".jpg")
         
     print("Validation Loss ")
@@ -146,7 +147,8 @@ if __name__ == "__main__":
         split='train')
 
     train_loader = DataLoader(dataset=data_train, num_workers=3,
-                             batch_size=batch_size, shuffle=True, drop_last=True)
+                             batch_size=batch_size, shuffle=True, drop_last=True, 
+                             collate_fn=RandSamplePerBatchCollator(maximum_obs_num=obs_num))
 
     data_test = colordata(\
         shape = shape, \
@@ -156,7 +158,8 @@ if __name__ == "__main__":
         split='test')
 
     test_loader = DataLoader(dataset=data_test, num_workers=3,
-                             batch_size=batch_size, shuffle=False, drop_last=True)
+                             batch_size=batch_size, shuffle=False, drop_last=True,
+                             collate_fn=RandSamplePerBatchCollator(maximum_obs_num=obs_num))
 
 
     encoder_output_sizes = [128, 256, 512, 512]

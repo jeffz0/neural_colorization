@@ -6,7 +6,7 @@ import os
 from torch.utils.data import Dataset, DataLoader
 
 class colordata(Dataset):
-    def __init__(self, basedir, listdir, shape=(32,32), obs_num=100, split='train'):
+    def __init__(self, basedir, listdir, shape=(32,32), obs_num=400, split='train'):
 
         self.img_fns = []
         
@@ -97,7 +97,7 @@ class colordata(Dataset):
 
 
 class RandSamplePerBatchCollator(object):
-    def __init__(self, high=32*32, minimum_obs_num=64, maximum_obs_num=100):
+    def __init__(self, high=32*32, minimum_obs_num=64, maximum_obs_num=400):
         self.high = high
         self.minimum_obs_num = minimum_obs_num
         self.maximum_obs_num = maximum_obs_num
@@ -164,14 +164,14 @@ if __name__ == "__main__":
 
     train_loader = DataLoader(dataset=data_train, num_workers=1,
                               batch_size=32, shuffle=True, drop_last=True, 
-                              collate_fn=RandSamplePerBatchCollator())
+                              collate_fn=RandSamplePerBatchCollator(maximum_obs_num=100))
 
     data_test = colordata(shape = (32,32), basedir=basedir,
         listdir=listdir, obs_num = 100, split='test')
 
     test_loader = DataLoader(dataset=data_test, num_workers=1,
                              batch_size=32, shuffle=True, drop_last=True,
-                             collate_fn=RandSamplePerBatchCollator())
+                             collate_fn=RandSamplePerBatchCollator(maximum_obs_num=100))
 
     for i, (color_c, gray_c, obs, pred, pred_gt,
             (x_coords_obs, y_coords_obs), 
