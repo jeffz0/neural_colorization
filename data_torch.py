@@ -97,14 +97,14 @@ class colordata(Dataset):
 
 
 class RandSamplePerBatchCollator(object):
-    def __init__(self, low=0, high=32*32, maximum_obs_num=100):
-        self.low = low
+    def __init__(self, high=32*32, minimum_obs_num=64, maximum_obs_num=100):
         self.high = high
+        self.minimum_obs_num = minimum_obs_num
         self.maximum_obs_num = maximum_obs_num
         
     def __call__(self, batch):
-        obs_num = torch.randint(self.maximum_obs_num, (1, )).item()
-        obs_indices = torch.randint(self.low, self.high, (obs_num, ))
+        obs_num = torch.randint(self.minimum_obs_num, self.maximum_obs_num, (1, )).item()
+        obs_indices = torch.randint(0, self.high, (obs_num, ))
 
         x_coords_obs, y_coords_obs  = [], []
         x_coords_pred, y_coords_pred = [], []
