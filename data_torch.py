@@ -132,8 +132,11 @@ class RandSamplePerBatchCollator(object):
             # Predicted data
             x_coords_pred.append(x_coords)
             y_coords_pred.append(y_coords)
+#             coords_pred.append(torch.cat(
+#                 (x_enc[x_coords], y_enc[y_coords]), dim=-1))
+            grey_pred = recon_const
             coords_pred.append(torch.cat(
-                (x_enc[x_coords], y_enc[y_coords]), dim=-1))
+                (x_enc[x_coords], y_enc[y_coords], grey_pred[:, x_coords, y_coords].t()), dim=-1))
             pred_gt = color_ab[:, x_coords, y_coords]
             pred_gts.append(pred_gt.t())
 

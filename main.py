@@ -99,14 +99,13 @@ def test(encoder, decoder, test_loader, test_output_dir):
             _loss += loss.item()
             _loss_a += log_prob_a.mean().item()
             _loss_b += log_prob_b.mean().item()
+            visualize(gray_c, color_c, x_coords_pred, y_coords_pred, mu_a, mu_b, 
+                      out_dir = test_output_dir + str(epoch) + "_" + str(i) + ".jpg")
         
     print("Validation Loss ")
     print("Loss: ", _loss/(i+1))
     print("Loss a: ", _loss_a/(i+1))
     print("Loss b: ", _loss_b/(i+1))
-
-    visualize(gray_c, color_c, x_coords_pred, y_coords_pred, mu_a, mu_b, 
-              out_dir = test_output_dir + str(epoch) + "_" + str(i) + ".jpg")
     
     encoder.train()
     decoder.train()
@@ -157,7 +156,7 @@ if __name__ == "__main__":
         split='test')
 
     test_loader = DataLoader(dataset=data_test, num_workers=3,
-                             batch_size=batch_size, shuffle=True, drop_last=True)
+                             batch_size=batch_size, shuffle=False, drop_last=True)
 
 
     encoder_output_sizes = [128, 256, 512, 512]
@@ -171,7 +170,7 @@ if __name__ == "__main__":
     for epoch in range(epochs):
         print("Epoch ", epoch)
         train(encoder, decoder, train_loader, train_output_dir)
-        test(encoder, decoder, train_loader, train_output_dir)
+        test(encoder, decoder, train_loader, test_output_dir)
         torch.save(encoder.state_dict(), model_output_dir + 'encoder_'+ str(epoch) +'.pth')
         torch.save(decoder.state_dict(), model_output_dir + 'decoder_'+ str(epoch) +'.pth')
         print("Saved models")
