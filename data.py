@@ -64,7 +64,10 @@ class colordata(Dataset):
         # Create the positional encoding of the coordinates
         x_coords_pred_enc = self.x_enc[x_coords_pred]
         y_coords_pred_enc = self.y_enc[y_coords_pred]
-        coords_pred = np.hstack((x_coords_pred_enc,y_coords_pred_enc))
+        gray_pred = recon_const[:,x_coords_pred, y_coords_pred]
+        coords_pred = np.hstack((x_coords_pred_enc,y_coords_pred_enc,gray_pred.T))
+        
+#         coords_pred = np.hstack((x_coords_pred_enc,y_coords_pred_enc))
         pred_gt = color_ab[:,x_coords_pred, y_coords_pred].T
 
         return color_ab, recon_const, coords_obs, coords_pred, pred_gt, (x_coords_obs, y_coords_obs), (x_coords_pred, y_coords_pred)

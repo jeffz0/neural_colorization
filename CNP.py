@@ -13,14 +13,14 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 
 class DeterministicEncoder(nn.Module):
-    def __init__(self, output_sizes):
+    def __init__(self, input_size, output_sizes):
         '''
         CNP encoder
 
         @param output_sizes: An iterable containing the output sizes of the encoding MLP.
         '''
         super(DeterministicEncoder, self).__init__()
-        encoder = [nn.Linear(42, output_sizes[0]), nn.ReLU(inplace=True)]
+        encoder = [nn.Linear(input_size, output_sizes[0]), nn.ReLU(inplace=True)]
         for i in range(1,len(output_sizes)):
             encoder += [nn.Linear(output_sizes[i - 1], output_sizes[i])]
             if i != len(output_sizes) - 1:
@@ -50,7 +50,7 @@ class DeterministicEncoder(nn.Module):
         return torch.mean(representation, dim=1)
     
 class DeterministicDecoder(nn.Module):
-    def __init__(self, output_sizes):
+    def __init__(self, input_size, output_sizes):
         '''
         CNP decoder
 
@@ -58,7 +58,7 @@ class DeterministicDecoder(nn.Module):
           as defined in `nn.Linear`.
         '''
         super(DeterministicDecoder, self).__init__()
-        decoder = [nn.Linear(512+40, output_sizes[0]), nn.ReLU(inplace=True)]
+        decoder = [nn.Linear(input_size, output_sizes[0]), nn.ReLU(inplace=True)]
         for i in range(1, len(output_sizes)):
             decoder += [nn.Linear(output_sizes[i - 1], output_sizes[i])]
             if i != len(output_sizes) - 1:
@@ -97,8 +97,8 @@ class DeterministicDecoder(nn.Module):
         return dist_a,  mu_a,  log_sigma_a, dist_b, mu_b, log_sigma_b
     
     
-def get_encoder(output_sizes):
-    return DeterministicEncoder(output_sizes)
+def get_encoder(input_size, output_sizes):
+    return DeterministicEncoder(input_size, output_sizes)
 
-def get_decoder(output_sizes):
-    return DeterministicDecoder(output_sizes)
+def get_decoder(input_size, output_sizes):
+    return DeterministicDecoder(input_size, output_sizes)
