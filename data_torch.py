@@ -121,9 +121,10 @@ class RandSamplePerBatchCollator(object):
             y_coord_obs = y_coords[obs_indices]
             x_coord_obs_enc = x_enc[x_coord_obs]
             y_coord_obs_enc = y_enc[y_coord_obs]
+            gray_obs = recon_const[:, x_coord_obs, y_coord_obs]
             color_obs = color_ab[:, x_coord_obs, y_coord_obs]
             coord_obs = torch.cat(
-                (x_coord_obs_enc, y_coord_obs_enc, color_obs.t()), dim=-1)
+                (x_coord_obs_enc, y_coord_obs_enc, gray_obs.t(), color_obs.t()), dim=-1)
 
             x_coords_obs.append(x_coord_obs)
             y_coords_obs.append(y_coord_obs)
@@ -134,9 +135,9 @@ class RandSamplePerBatchCollator(object):
             y_coords_pred.append(y_coords)
 #             coords_pred.append(torch.cat(
 #                 (x_enc[x_coords], y_enc[y_coords]), dim=-1))
-            grey_pred = recon_const
+            gray_pred = recon_const[:, x_coords, y_coords]
             coords_pred.append(torch.cat(
-                (x_enc[x_coords], y_enc[y_coords], grey_pred[:, x_coords, y_coords].t()), dim=-1))
+                (x_enc[x_coords], y_enc[y_coords], gray_pred.t()), dim=-1))
             pred_gt = color_ab[:, x_coords, y_coords]
             pred_gts.append(pred_gt.t())
 

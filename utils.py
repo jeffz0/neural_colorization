@@ -2,8 +2,50 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import os
+import torch
+import torch.nn.functional as F
 
+def get_gradient_loss(mu_a, mu_b, preds_gt, device=0):
+    x = torch.Tensor([[1, 0, -1],
+    [2, 0, -2],
+    [1, 0, -1]]).float().to(device)
 
+    y = torch.Tensor([[1, 2, 1],
+    [0, 0, 0],
+    [-1, -2, -1]]).float().to(device)
+
+    mu_reshape = torch.cat((mu_a.reshape(-1, 1, 32,32),mu_b.reshape(-1, 1, 32,32)),1)
+    preds_gt_reshape = preds_gt.reshape(-1,2,32,32).float()
+
+    x = x.view((1,1,3,3)).expand((1,2,3,3))
+    G_x_pred = F.conv2d(mu_reshape, x)
+    G_x_gt = F.conv2d(preds_gt_reshape.to(device) , x)
+
+    y = y.view((1,1,3,3)).expand((1,2,3,3))
+    G_y_pred = F.conv2d(mu_reshape, y)
+    G_y_gt = F.conv2d(preds_gt_reshape.to(device), y)
+
+    criterion = torch.nn.MSELoss()
+    gradient_loss = criterion(G_x_pred, G_x_gt) + criterion(G_y_pred, G_y_gt)
+
+    return gradient_loss
+
+def get_l2_loss(mu_a, mu_b, preds_gt):
+    mu_reshape = torch.cat((mu_a.reshape(-1, 1, 32,32),mu_b.reshape(-1, 1, 32,32)),1)
+    preds_gt_reshape = preds_gt.reshape(-1,2,32,32).float()
+
+    criterion = torch.nn.MSELoss()
+    l2_loss = criterion(mu_reshape, preds_gt_reshape)
+    return l2_loss
+
+def print_statement(loss, log_loss, gradient_loss = None, l2_loss = None,):
+    print_str = "Loss: {}, log loss: {}".format(round(loss,5), round(log_loss,5))
+    if l2_loss is not None:
+        print_str += ", l2 loss: {}".format(round(l2_loss,5))
+    if gradient_loss is not None:
+        print_str += ", grad loss: {}".format(round(gradient_loss,5))
+    print(print_str)
+    
 def decodeimg(img_enc):
     img_dec = (((img_enc+1.)*1.)/2.)*255.
     img_dec[img_dec < 0.] = 0.
